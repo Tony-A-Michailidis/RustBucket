@@ -260,12 +260,6 @@ for programs that fit on a screen that's the right amount of machinery.
 - **A `tune` block** for adjusting a running value.
 - **Syntax highlighting** in the editor.
 
-## Contributing
-
-Issues and pull requests welcome. Good first additions: more trouble codes in
-the table, more cars in the garage, or another worked example. If you add a
-keyword, it has to pass the rule at the top of this file.
-
 ## Licence
 
 MIT 
