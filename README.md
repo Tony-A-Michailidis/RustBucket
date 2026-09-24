@@ -268,4 +268,4 @@ keyword, it has to pass the rule at the top of this file.
 
 ## Licence
 
-[MIT, or whatever you prefer — replace this line.]
+MIT 
