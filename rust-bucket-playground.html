@@ -1,0 +1,1264 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rust Bucket — a language for people who like cars</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#E6E7E2;
+    --paper-2:#DCDED8;
+    --blue:#16324A;
+    --blue-line:#3E6C8E;
+    --blue-soft:#7FA6C0;
+    --ink:#1B2A33;
+    --ink-mute:#5C6B73;
+    --cyan:#2E7DA8;
+    --signal:#C8901B;
+    --rust:#A93E28;
+    --rule:rgba(27,42,51,.18);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:15px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 24px 72px}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-mute);margin:0 0 6px;
+  }
+  header.top{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;
+    border-bottom:2px solid var(--ink);padding-bottom:18px;margin-bottom:8px;flex-wrap:wrap}
+  h1{font-family:'Archivo',sans-serif;font-weight:600;font-size:46px;line-height:.92;
+    letter-spacing:-.03em;margin:0}
+  h1 .dot{color:var(--signal)}
+  .tag{max-width:34ch;font-size:14px;color:var(--ink-mute);margin:8px 0 0}
+  .gauge{flex:0 0 auto}
+  .stripe{height:6px;background:
+    repeating-linear-gradient(90deg,var(--ink) 0 28px,transparent 28px 34px);
+    margin:0 0 28px;opacity:.5}
+  .grid{display:grid;grid-template-columns:1.15fr .85fr;gap:20px;align-items:start}
+  @media(max-width:840px){.grid{grid-template-columns:1fr}h1{font-size:36px}}
+  .label{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-mute);display:flex;justify-content:space-between;
+    align-items:center;margin:0 0 8px}
+  .panel{background:var(--blue);border-radius:3px;overflow:hidden;
+    background-image:linear-gradient(rgba(126,166,192,.09) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(126,166,192,.09) 1px,transparent 1px);
+    background-size:22px 22px}
+  textarea{
+    width:100%;min-height:400px;resize:vertical;display:block;
+    background:transparent;color:#E7EEF3;border:0;outline:0;padding:18px;
+    font-family:'IBM Plex Mono',monospace;font-size:13.5px;line-height:1.75;tab-size:2;
+  }
+  textarea:focus{box-shadow:inset 0 0 0 2px var(--blue-line)}
+  .console{background:#F3F3F0;border:1px solid var(--rule);border-radius:3px;
+    padding:14px 16px;min-height:400px;font-family:'IBM Plex Mono',monospace;
+    font-size:13px;line-height:1.75;white-space:pre-wrap;word-break:break-word}
+  .console .ln{display:block}
+  .console .ln::before{content:"› ";color:var(--blue-soft)}
+  .console .err{color:var(--rust)}
+  .console .err::before{content:"! ";color:var(--rust)}
+  .console .note{color:var(--ink-mute);font-style:italic}
+  .console .note::before{content:""}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0 0}
+  button{font-family:'Archivo',sans-serif;font-size:14px;font-weight:500;cursor:pointer;
+    border-radius:3px;padding:9px 18px;transition:transform .08s,background .15s}
+  button:active{transform:translateY(1px)}
+  button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+  .run{background:var(--signal);color:#1B1405;border:1px solid #A2740F}
+  .run:hover{background:#D9A02A}
+  .ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+  .ghost:hover{background:var(--paper-2)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+  .chip{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.04em;
+    background:transparent;border:1px solid var(--rule);color:var(--ink-mute);
+    padding:5px 11px;border-radius:20px}
+  .chip:hover{border-color:var(--cyan);color:var(--cyan)}
+  .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  section.ref{margin-top:56px;border-top:2px solid var(--ink);padding-top:20px}
+  h2{font-family:'Archivo',sans-serif;font-weight:600;font-size:22px;letter-spacing:-.01em;margin:0 0 4px}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:0 32px;margin-top:18px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  td{padding:7px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+  td.k{font-family:'IBM Plex Mono',monospace;color:var(--cyan);white-space:nowrap;
+    padding-right:14px;width:1%;font-weight:500}
+  .why{margin-top:40px;border-top:1px solid var(--rule);padding-top:16px;
+    font-size:14px;color:var(--ink-mute);max-width:70ch}
+  .dash{display:flex;align-items:flex-end;gap:18px}
+  .lamp{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.14em;line-height:1.35;
+    text-align:center;padding:8px 10px;border:1px solid var(--rule);border-radius:3px;
+    color:rgba(27,42,51,.3);margin-bottom:18px;transition:background .25s,color .25s}
+  .lamp.on{background:#F2B233;color:#3A2700;border-color:#A2740F}
+  .chipgroup{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-mute);align-self:center;margin:0 4px 0 14px}
+  .chipgroup:first-child{margin-left:0}
+  .sub{max-width:68ch;color:var(--ink-mute);font-size:14px;margin:6px 0 0}
+  .anatomy{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--rule);
+    border-radius:3px;margin:22px 0 4px;background:#F3F3F0}
+  .anatomy div{padding:14px 16px;border-right:1px solid var(--rule)}
+  .anatomy div:last-child{border-right:0}
+  .anatomy b{display:block;font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:40px;
+    line-height:1;color:var(--blue);margin-bottom:10px}
+  .anatomy span{display:block;font-size:12.5px;color:var(--ink-mute);line-height:1.5}
+  .anatomy em{font-style:normal;color:var(--ink);font-weight:500}
+  @media(max-width:640px){.anatomy{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .anatomy div:nth-child(2){border-right:0}.anatomy div:nth-child(-n+2){border-bottom:1px solid var(--rule)}}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">Language spec / rev 2</p>
+      <h1>RUST<br>BUCKET<span class="dot">.</span></h1>
+      <p class="tag">A small programming language where the keywords come from the garage. Yes, the name is taken. This one has more actual rust. Write it on the left, run it on the right.</p>
+    </div>
+    <div class="dash">
+    <div class="lamp" id="lamp" title="Check engine light">CHECK<br>ENGINE</div>
+    <div class="gauge">
+      <svg width="150" height="96" viewBox="0 0 150 96" role="img" aria-label="Tachometer that sweeps when a program runs">
+        <path d="M20 82 A55 55 0 0 1 130 82" fill="none" stroke="#1B2A33" stroke-opacity=".22" stroke-width="7"/>
+        <path d="M104 30 A55 55 0 0 1 130 82" fill="none" stroke="#A93E28" stroke-width="7"/>
+        <g id="ticks" stroke="#1B2A33" stroke-opacity=".45" stroke-width="1.5"></g>
+        <line id="needle" x1="75" y1="82" x2="75" y2="36" stroke="#C8901B" stroke-width="3"
+              stroke-linecap="round" transform="rotate(-88 75 82)" style="transition:transform .5s cubic-bezier(.2,.9,.3,1)"/>
+        <circle cx="75" cy="82" r="5" fill="#1B2A33"/>
+        <text x="75" y="94" text-anchor="middle" font-family="IBM Plex Mono, monospace"
+              font-size="9" letter-spacing="1.5" fill="#5C6B73">RPM x1000</text>
+      </svg>
+    </div>
+    </div>
+  </header>
+  <div class="stripe"></div>
+
+  <div class="chips" id="chips"></div>
+
+  <div class="grid">
+    <div>
+      <p class="label"><span>Source</span><span id="fname">quarter-mile.bkt</span></p>
+      <div class="panel"><textarea id="code" spellcheck="false" aria-label="Rust Bucket source code"></textarea></div>
+      <div class="bar">
+        <button class="run" id="run">Run</button>
+        <button class="ghost" id="reset">Reset example</button>
+        <span id="status" style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink-mute)"></span>
+      </div>
+    </div>
+    <div>
+      <p class="label"><span>Output</span><span id="vehicleLabel">no car plugged in</span></p>
+      <div class="console" id="out"><span class="note">Press Run.</span></div>
+    </div>
+  </div>
+
+  <section class="ref">
+    <p class="eyebrow">Reference</p>
+    <h2>Every word in the language</h2>
+    <div class="cols">
+      <table>
+        <tr><td class="k">spec</td><td>Declare a value. <em>Specs are what a car is.</em></td></tr>
+        <tr><td class="k">shift</td><td>Change a value you already declared.</td></tr>
+        <tr><td class="k">honk</td><td>Print to the output.</td></tr>
+        <tr><td class="k">check … swerve</td><td>If / else. Chain with <code>swerve check</code>.</td></tr>
+        <tr><td class="k">lap i from 1 to 5</td><td>Counted loop. Both ends included.</td></tr>
+        <tr><td class="k">cruise</td><td>Keep going while a condition holds.</td></tr>
+        <tr><td class="k">brake</td><td>Leave the loop now.</td></tr>
+      </table>
+      <table>
+        <tr><td class="k">build name(a, b)</td><td>Define a function.</td></tr>
+        <tr><td class="k">deliver</td><td>Return a value from a build.</td></tr>
+        <tr><td class="k">green / red</td><td>True / false. Traffic lights.</td></tr>
+        <tr><td class="k">stalled</td><td>No value at all.</td></tr>
+        <tr><td class="k">[1, 2, 3]</td><td>A convoy. Index from zero: <code>gears[0]</code>.</td></tr>
+        <tr><td class="k">and or not</td><td>Logic, spelled out.</td></tr>
+        <tr><td class="k">+ - * / % ^</td><td>Maths. <code>^</code> is power.</td></tr>
+      </table>
+      <table>
+        <tr><td class="k">round(x, n)</td><td>Round to n decimals.</td></tr>
+        <tr><td class="k">sqrt / cbrt</td><td>Square and cube roots.</td></tr>
+        <tr><td class="k">abs / floor</td><td>Magnitude, round down.</td></tr>
+        <tr><td class="k">min / max</td><td>Smaller, larger.</td></tr>
+        <tr><td class="k">len(convoy)</td><td>How many items.</td></tr>
+        <tr><td class="k">add(convoy, x)</td><td>Append to a convoy.</td></tr>
+        <tr><td class="k">text(x)</td><td>Turn a number into words.</td></tr>
+      </table>
+    </div>
+    <p class="why">The design rule was that a keyword only earns its place if the car meaning explains the code meaning. <code>shift</code> changes what gear you're in. <code>lap</code> is a counted trip round a circuit, which is exactly a for-loop. <code>brake</code> stops you early. <code>swerve</code> is what you do when the road ahead is blocked. Nothing is themed for the sake of it — <code>spec</code> and <code>build</code> would read fine in a real language.</p>
+  </section>
+
+  <section class="ref">
+    <p class="eyebrow">Reference / OBD-II</p>
+    <h2>Talking to the car</h2>
+    <p class="sub">Every car sold in the US since 1996, and in Europe since 2001 (petrol) or 2004 (diesel), has an OBD-II port under the dash. These commands read it. In this playground the cars are simulated, each with its own fault. Pick one with <code>plug</code>.</p>
+
+    <div class="anatomy" aria-label="How a trouble code is built, using P0301">
+      <div><b>P</b><span><em>System.</em> P powertrain, B body, C chassis, U network.</span></div>
+      <div><b>0</b><span><em>Who defined it.</em> 0 generic, same on every car. 1 manufacturer-specific.</span></div>
+      <div><b>3</b><span><em>Subsystem.</em> 3 is ignition and misfire. 4 is emissions, 7 is transmission.</span></div>
+      <div><b>01</b><span><em>The fault.</em> Here, cylinder 1. So P0301 reads as “cylinder 1 misfire.”</span></div>
+    </div>
+
+    <div class="cols">
+      <table>
+        <tr><td class="k">plug "commuter"</td><td>Connect to a car on the lift.</td></tr>
+        <tr><td class="k">scan()</td><td>Stored trouble codes. OBD mode 03.</td></tr>
+        <tr><td class="k">pending()</td><td>Codes seen once, not yet confirmed. Mode 07.</td></tr>
+        <tr><td class="k">clear()</td><td>Erase codes, lamp off. Mode 04. Returns how many.</td></tr>
+        <tr><td class="k">mil()</td><td>Is the check engine light on?</td></tr>
+        <tr><td class="k">vin() / vehicle()</td><td>VIN (mode 09) and a readable name.</td></tr>
+        <tr><td class="k">wait(seconds)</td><td>Let simulated time pass. Engines warm up; faults return.</td></tr>
+      </table>
+      <table>
+        <tr><td class="k">sensor("rpm")</td><td>A live reading. Mode 01. Accepts a PID too: <code>sensor("0C")</code>.</td></tr>
+        <tr><td class="k">sensors()</td><td>Every sensor name.</td></tr>
+        <tr><td class="k">unit("coolant")</td><td>The unit, for honking.</td></tr>
+        <tr><td class="k">explain("P0420")</td><td>What a code means. Unknown codes still get decoded by structure.</td></tr>
+        <tr><td class="k">causes("P0420")</td><td>Common causes, most likely first.</td></tr>
+        <tr><td class="k">pad(x, width)</td><td>Pad text so columns line up.</td></tr>
+      </table>
+      <table>
+        <tr><td class="k">rpm · 0C</td><td>Engine speed, rpm</td></tr>
+        <tr><td class="k">coolant · 05</td><td>Coolant temp, °C</td></tr>
+        <tr><td class="k">stft · ltft</td><td>Short / long fuel trim, %</td></tr>
+        <tr><td class="k">maf · 10</td><td>Airflow, g/s</td></tr>
+        <tr><td class="k">o2 · 14</td><td>Upstream O2 sensor, V</td></tr>
+        <tr><td class="k">load · throttle</td><td>Engine load, throttle, %</td></tr>
+        <tr><td class="k">also</td><td>speed, intake, timing, voltage, fuel</td></tr>
+      </table>
+    </div>
+
+    <div class="cols" style="margin-top:28px">
+      <table>
+        <tr><td class="k">"clean"</td><td>2016 Mazda MX-5. Nothing wrong. Your baseline.</td></tr>
+        <tr><td class="k">"commuter"</td><td>2011 Honda Accord. Running lean, tired catalytic converter, small EVAP leak pending.</td></tr>
+        <tr><td class="k">"misfire"</td><td>2008 Subaru WRX. Cylinder 3 is misfiring. Rough idle.</td></tr>
+      </table>
+      <table>
+        <tr><td class="k">"overheat"</td><td>2005 Ford F-150. Starts clean. Codes appear as it heats up.</td></tr>
+        <tr><td class="k">"cold"</td><td>2012 Toyota Corolla. Thermostat stuck open, never reaches temperature.</td></tr>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var KW = ["spec","shift","honk","check","swerve","lap","from","to","cruise",
+          "build","deliver","brake","green","red","stalled","and","or","not","plug"];
+
+function TErr(msg, line){ this.msg = msg; this.line = line; }
+
+function tokenize(src){
+  var toks = [], i = 0, line = 1;
+  function push(t, v){ toks.push({t:t, v:v, line:line}); }
+  while(i < src.length){
+    var c = src[i];
+    if(c === "\n"){ line++; i++; continue; }
+    if(c === " " || c === "\t" || c === "\r"){ i++; continue; }
+    if(c === "/" && src[i+1] === "/"){ while(i < src.length && src[i] !== "\n") i++; continue; }
+    if(/[0-9]/.test(c) || (c === "." && /[0-9]/.test(src[i+1]))){
+      var s = i;
+      while(i < src.length && /[0-9.]/.test(src[i])) i++;
+      var n = parseFloat(src.slice(s, i));
+      if(isNaN(n)) throw new TErr('That is not a number: "' + src.slice(s,i) + '"', line);
+      push("num", n); continue;
+    }
+    if(c === '"'){
+      i++; var str = "";
+      while(i < src.length && src[i] !== '"'){
+        if(src[i] === "\\" && src[i+1] === "n"){ str += "\n"; i += 2; }
+        else { if(src[i] === "\n") line++; str += src[i++]; }
+      }
+      if(i >= src.length) throw new TErr("A piece of text is missing its closing quote", line);
+      i++; push("str", str); continue;
+    }
+    if(/[A-Za-z_]/.test(c)){
+      var st = i;
+      while(i < src.length && /[A-Za-z0-9_]/.test(src[i])) i++;
+      var w = src.slice(st, i);
+      push(KW.indexOf(w) >= 0 ? w : "name", w); continue;
+    }
+    var two = src.substr(i, 2);
+    if(two === "==" || two === "!=" || two === "<=" || two === ">="){ push(two); i += 2; continue; }
+    if("+-*/%^()[]{},<>=".indexOf(c) >= 0){ push(c); i++; continue; }
+    throw new TErr('Rust Bucket does not know what to do with "' + c + '"', line);
+  }
+  push("eof");
+  return toks;
+}
+
+function parse(toks){
+  var p = 0;
+  function peek(){ return toks[p]; }
+  function at(t){ return toks[p].t === t; }
+  function next(){ return toks[p++]; }
+  function eat(t, what){
+    if(toks[p].t !== t) throw new TErr("Expected " + (what || '"' + t + '"') + " but found " + describe(toks[p]), toks[p].line);
+    return toks[p++];
+  }
+  function describe(tok){
+    if(tok.t === "eof") return "the end of the program";
+    return '"' + (tok.v !== undefined ? tok.v : tok.t) + '"';
+  }
+
+  function program(){
+    var body = [];
+    while(!at("eof")) body.push(statement());
+    return body;
+  }
+
+  function block(){
+    eat("{", "a { to open the block");
+    var body = [];
+    while(!at("}")){
+      if(at("eof")) throw new TErr("A block was opened but never closed with }", toks[p].line);
+      body.push(statement());
+    }
+    eat("}");
+    return body;
+  }
+
+  function statement(){
+    var tok = peek();
+    switch(tok.t){
+      case "spec": {
+        next();
+        var nm = eat("name", "a name after spec").v;
+        eat("=", "an = after the name");
+        return {k:"spec", name:nm, val:expr(), line:tok.line};
+      }
+      case "shift": {
+        next();
+        var target = postfix(primary());
+        eat("=", "an = after the name");
+        var value = expr();
+        if(target.k === "var") return {k:"assign", name:target.name, val:value, line:tok.line};
+        if(target.k === "index") return {k:"setindex", obj:target.obj, idx:target.idx, val:value, line:tok.line};
+        throw new TErr("shift needs a name or a convoy slot on the left", tok.line);
+      }
+      case "honk": next(); return {k:"honk", val:expr(), line:tok.line};
+      case "plug": next(); return {k:"plug", val:expr(), line:tok.line};
+      case "check": return checkStmt();
+      case "lap": {
+        next();
+        var v = eat("name", "a counter name after lap").v;
+        eat("from", '"from"');
+        var lo = expr();
+        eat("to", '"to"');
+        var hi = expr();
+        return {k:"lap", name:v, lo:lo, hi:hi, body:block(), line:tok.line};
+      }
+      case "cruise": { next(); var c = expr(); return {k:"cruise", cond:c, body:block(), line:tok.line}; }
+      case "brake": next(); return {k:"brake", line:tok.line};
+      case "build": {
+        next();
+        var fname = eat("name", "a name after build").v;
+        eat("(");
+        var params = [];
+        if(!at(")")){
+          params.push(eat("name", "a parameter name").v);
+          while(at(",")){ next(); params.push(eat("name", "a parameter name").v); }
+        }
+        eat(")");
+        return {k:"build", name:fname, params:params, body:block(), line:tok.line};
+      }
+      case "deliver": {
+        next();
+        if(at("}")) return {k:"deliver", val:null, line:tok.line};
+        return {k:"deliver", val:expr(), line:tok.line};
+      }
+      default: return {k:"expr", val:expr(), line:tok.line};
+    }
+  }
+
+  function checkStmt(){
+    var line = eat("check").line;
+    var cond = expr();
+    var then = block();
+    var alt = null;
+    if(at("swerve")){
+      next();
+      alt = at("check") ? [checkStmt()] : block();
+    }
+    return {k:"check", cond:cond, then:then, alt:alt, line:line};
+  }
+
+  function expr(){ return orExpr(); }
+  function orExpr(){
+    var l = andExpr();
+    while(at("or")){ next(); l = {k:"logic", op:"or", l:l, r:andExpr()}; }
+    return l;
+  }
+  function andExpr(){
+    var l = equality();
+    while(at("and")){ next(); l = {k:"logic", op:"and", l:l, r:equality()}; }
+    return l;
+  }
+  function equality(){
+    var l = compare();
+    while(at("==") || at("!=")){ var o = next().t; l = {k:"bin", op:o, l:l, r:compare()}; }
+    return l;
+  }
+  function compare(){
+    var l = term();
+    while(at("<") || at(">") || at("<=") || at(">=")){ var o = next().t; l = {k:"bin", op:o, l:l, r:term()}; }
+    return l;
+  }
+  function term(){
+    var l = factor();
+    while(at("+") || at("-")){ var o = next().t; l = {k:"bin", op:o, l:l, r:factor()}; }
+    return l;
+  }
+  function factor(){
+    var l = unary();
+    while(at("*") || at("/") || at("%")){ var o = next().t; l = {k:"bin", op:o, l:l, r:unary()}; }
+    return l;
+  }
+  function unary(){
+    if(at("-")){ var ln = next().line; return {k:"neg", val:unary(), line:ln}; }
+    if(at("not")){ next(); return {k:"not", val:unary()}; }
+    return power();
+  }
+  function power(){
+    var base = postfix(primary());
+    if(at("^")){ next(); return {k:"bin", op:"^", l:base, r:unary()}; }
+    return base;
+  }
+  function postfix(node){
+    for(;;){
+      if(at("(")){
+        var line = next().line;
+        var args = [];
+        if(!at(")")){
+          args.push(expr());
+          while(at(",")){ next(); args.push(expr()); }
+        }
+        eat(")", "a ) to close the arguments");
+        node = {k:"call", fn:node, args:args, line:line};
+      } else if(at("[")){
+        var l2 = next().line;
+        var ix = expr();
+        eat("]", "a ] to close the index");
+        node = {k:"index", obj:node, idx:ix, line:l2};
+      } else return node;
+    }
+  }
+  function primary(){
+    var tok = peek();
+    if(tok.t === "num"){ next(); return {k:"lit", val:tok.v}; }
+    if(tok.t === "str"){ next(); return {k:"lit", val:tok.v}; }
+    if(tok.t === "green"){ next(); return {k:"lit", val:true}; }
+    if(tok.t === "red"){ next(); return {k:"lit", val:false}; }
+    if(tok.t === "stalled"){ next(); return {k:"lit", val:null}; }
+    if(tok.t === "name"){ next(); return {k:"var", name:tok.v, line:tok.line}; }
+    if(tok.t === "("){ next(); var e = expr(); eat(")", "a closing )"); return e; }
+    if(tok.t === "["){
+      next();
+      var items = [];
+      if(!at("]")){
+        items.push(expr());
+        while(at(",")){ next(); items.push(expr()); }
+      }
+      eat("]", "a ] to close the convoy");
+      return {k:"convoy", items:items, line:tok.line};
+    }
+    throw new TErr("Rust Bucket got stuck at " + describe(tok), tok.line);
+  }
+
+  return program();
+}
+
+function Env(parent){ this.v = Object.create(null); this.p = parent; }
+Env.prototype.has = function(n){ return n in this.v || (this.p ? this.p.has(n) : false); };
+Env.prototype.get = function(n, line){
+  var e = this;
+  while(e){ if(n in e.v) return e.v[n]; e = e.p; }
+  throw new TErr('Nothing called "' + n + '" has been specced yet', line);
+};
+Env.prototype.set = function(n, val, line){
+  var e = this;
+  while(e){ if(n in e.v){ e.v[n] = val; return; } e = e.p; }
+  throw new TErr('Cannot shift "' + n + '" — it was never specced', line);
+};
+Env.prototype.declare = function(n, val){ this.v[n] = val; };
+
+var BRAKE = {brake:true};
+function Ret(v){ this.v = v; }
+
+function fmtNum(n){
+  if(!isFinite(n)) return n > 0 ? "infinity" : (n < 0 ? "-infinity" : "not a number");
+  if(Number.isInteger(n)) return String(n);
+  return String(parseFloat(n.toFixed(6)));
+}
+function show(v){
+  if(v === null || v === undefined) return "stalled";
+  if(v === true) return "green";
+  if(v === false) return "red";
+  if(typeof v === "number") return fmtNum(v);
+  if(Array.isArray(v)) return "[" + v.map(show).join(", ") + "]";
+  if(v && v.__fn) return "<build " + v.name + ">";
+  return String(v);
+}
+function truthy(v){
+  if(v === null || v === undefined || v === false) return false;
+  if(v === 0 || v === "") return false;
+  if(Array.isArray(v)) return v.length > 0;
+  return true;
+}
+function num(v, line, what){
+  if(typeof v !== "number") throw new TErr((what || "That") + " needs a number, but got " + show(v), line);
+  return v;
+}
+
+var DTC = {
+  P0100:"Mass air flow circuit malfunction",
+  P0101:"Mass air flow circuit range or performance problem",
+  P0102:"Mass air flow circuit low input",
+  P0113:"Intake air temperature sensor circuit high input",
+  P0117:"Engine coolant temperature sensor circuit low input",
+  P0118:"Engine coolant temperature sensor circuit high input",
+  P0128:"Coolant temperature below thermostat regulating temperature",
+  P0130:"O2 sensor circuit malfunction (bank 1, sensor 1)",
+  P0133:"O2 sensor circuit slow response (bank 1, sensor 1)",
+  P0141:"O2 sensor heater circuit malfunction (bank 1, sensor 2)",
+  P0171:"System too lean (bank 1)",
+  P0172:"System too rich (bank 1)",
+  P0174:"System too lean (bank 2)",
+  P0175:"System too rich (bank 2)",
+  P0217:"Engine overtemperature condition",
+  P0300:"Random or multiple cylinder misfire detected",
+  P0325:"Knock sensor 1 circuit malfunction (bank 1)",
+  P0335:"Crankshaft position sensor A circuit malfunction",
+  P0340:"Camshaft position sensor circuit malfunction",
+  P0401:"Exhaust gas recirculation flow insufficient",
+  P0420:"Catalyst system efficiency below threshold (bank 1)",
+  P0430:"Catalyst system efficiency below threshold (bank 2)",
+  P0440:"Evaporative emission control system malfunction",
+  P0442:"Evaporative emission system leak detected (small leak)",
+  P0455:"Evaporative emission system leak detected (large leak)",
+  P0456:"Evaporative emission system leak detected (very small leak)",
+  P0457:"Evaporative emission system leak detected (fuel cap loose or off)",
+  P0500:"Vehicle speed sensor malfunction",
+  P0505:"Idle control system malfunction",
+  P0562:"System voltage low",
+  P0700:"Transmission control system malfunction",
+  P0741:"Rust Bucket converter clutch circuit performance or stuck off",
+  U0100:"Lost communication with ECM/PCM A"
+};
+var EVAP = ["Loose or worn fuel cap", "Cracked EVAP hose or fitting", "Faulty purge or vent valve"];
+var CAUSES = {
+  P0420:["Worn or failing catalytic converter", "Faulty downstream O2 sensor", "Exhaust leak near the O2 sensors", "An old misfire that damaged the cat"],
+  P0171:["Vacuum leak (hoses, intake gasket)", "Dirty or failing MAF sensor", "Weak fuel pump or clogged fuel filter", "Leaking PCV valve or hose"],
+  P0300:["Worn spark plugs", "Failing ignition coil", "Vacuum leak", "Low fuel pressure"],
+  P0128:["Thermostat stuck open", "Faulty coolant temperature sensor", "Low coolant level"],
+  P0217:["Low coolant or a leak", "Failed water pump", "Thermostat stuck closed", "Radiator fan not running", "Blocked radiator"],
+  P0442:EVAP, P0455:EVAP, P0456:EVAP, P0457:EVAP
+};
+for(var cyl = 1; cyl <= 8; cyl++){
+  DTC["P030" + cyl] = "Cylinder " + cyl + " misfire detected";
+  CAUSES["P030" + cyl] = ["Spark plug on cylinder " + cyl,
+    "Ignition coil on cylinder " + cyl + " (swap it with a neighbour and rescan)",
+    "Fuel injector on cylinder " + cyl, "Low compression on cylinder " + cyl];
+}
+var P_SUB = {"0":"fuel, air and emissions","1":"fuel and air metering","2":"fuel injector circuit",
+  "3":"ignition and misfire","4":"auxiliary emissions","5":"speed and idle control",
+  "6":"computer and output circuit","7":"transmission","8":"transmission","9":"transmission",
+  "A":"hybrid propulsion","B":"hybrid propulsion","C":"hybrid propulsion"};
+
+function dtcKey(x, ln){
+  if(typeof x !== "string" || !/^[PBCU][0-3][0-9A-F]{3}$/i.test(x))
+    throw new TErr('"' + show(x) + '" is not an OBD-II code. They look like "P0420"', ln);
+  return x.toUpperCase();
+}
+function explainCode(code){
+  if(DTC[code]) return DTC[code];
+  var sys = {P:"powertrain", B:"body", C:"chassis", U:"network"}[code[0]];
+  var d = code[1];
+  var owner = (d === "0" || d === "2") ? "generic" : (d === "1" ? "manufacturer-specific" : "shared generic/manufacturer");
+  var out = "Not in Rust Bucket's table: a " + owner + " " + sys + " code";
+  if(code[0] === "P" && (d === "0" || d === "2") && P_SUB[code[2]]) out += " in the " + P_SUB[code[2]] + " group";
+  return out;
+}
+
+var SENSORS = {
+  rpm:["0C","rpm"], speed:["0D","km/h"], coolant:["05","°C"], intake:["0F","°C"],
+  load:["04","%"], throttle:["11","%"], maf:["10","g/s"], stft:["06","%"], ltft:["07","%"],
+  o2:["14","V"], timing:["0E","° BTDC"], voltage:["42","V"], fuel:["2F","%"]
+};
+function sensorKey(x, ln){
+  if(typeof x !== "string") throw new TErr('sensor needs a name in quotes, like sensor("rpm")', ln);
+  var k = x.toLowerCase();
+  if(SENSORS[k]) return k;
+  var up = x.toUpperCase().replace(/^0X/, "");
+  for(var n in SENSORS) if(SENSORS[n][0] === up) return n;
+  throw new TErr('No sensor called "' + x + '". Try: ' + Object.keys(SENSORS).join(", "), ln);
+}
+
+var PROFILES = {
+  clean:   {car:"2016 Mazda MX-5",         vin:"JM1NDAB7XG0000000", target:88,  stored:[], pending:[], fuel:71},
+  commuter:{car:"2011 Honda Accord",       vin:"1HGCP2F3XBA000000", target:89,  stored:["P0420","P0171"], pending:["P0442"], lean:true, fuel:34},
+  misfire: {car:"2008 Subaru Impreza WRX", vin:"JF1GE76X08G000000", target:91,  stored:["P0303","P0300"], pending:[], rough:true, fuel:52},
+  overheat:{car:"2005 Ford F-150",         vin:"1FTPW14X05K000000", target:118, stored:[], pending:[], overheat:true, fuel:63},
+  cold:    {car:"2012 Toyota Corolla",     vin:"2T1BU4EEXCC000000", target:68,  stored:["P0128"], pending:[], fuel:48}
+};
+
+function mulberry(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function makeSim(key){
+  var p = PROFILES[key], seed = 7;
+  for(var i = 0; i < key.length; i++) seed = seed * 31 + key.charCodeAt(i);
+  return {key:key, p:p, t:0, rand:mulberry(seed), stored:p.stored.slice(), pending:p.pending.slice(),
+          clearedAt:null, lastRpm:null};
+}
+function simCoolant(s){ return s.p.target - (s.p.target - 21) * Math.exp(-s.t / 300); }
+function addOnce(list, code){ if(list.indexOf(code) < 0) list.push(code); }
+function removeFrom(list, code){ var i = list.indexOf(code); if(i >= 0) list.splice(i, 1); }
+function simAdvance(s, dt){
+  s.t += dt;
+  if(s.p.overheat){
+    var c = simCoolant(s);
+    if(c > 102 && s.stored.indexOf("P0217") < 0) addOnce(s.pending, "P0217");
+    if(c > 108){ addOnce(s.stored, "P0217"); removeFrom(s.pending, "P0217"); }
+  }
+  if(s.clearedAt !== null){
+    var el = s.t - s.clearedAt;
+    if(el >= 240) s.p.stored.concat(s.p.pending).forEach(function(code){
+      if(s.stored.indexOf(code) < 0) addOnce(s.pending, code);
+    });
+    if(el >= 840) s.p.stored.forEach(function(code){ addOnce(s.stored, code); removeFrom(s.pending, code); });
+  }
+}
+function simRead(s, name){
+  simAdvance(s, 0.5);
+  var r = s.rand, p = s.p;
+  function j(a){ return (r() * 2 - 1) * a; }
+  var c = simCoolant(s);
+  var warm = Math.max(0, Math.min(1, (c - 21) / 60));
+  switch(name){
+    case "coolant":  return c + j(0.3);
+    case "rpm":      s.lastRpm = 1150 - 400 * warm + (p.rough ? j(120) - 30 : j(12)); return s.lastRpm;
+    case "speed":    return 0;
+    case "intake":   return 24 + warm * 9 + j(0.4);
+    case "load":     return (p.rough ? 27 : 21) + j(1.2);
+    case "throttle": return 13.7 + j(0.2);
+    case "maf":      return (p.lean ? 2.6 : 3.2) + j(0.1);
+    case "stft":     return p.lean ? 12 + r() * 6 : j(3);
+    case "ltft":     return p.lean ? 13.3 + j(0.5) : j(1.5);
+    case "o2":       return p.lean ? 0.18 + 0.12 * Math.sin(s.t * 2.7) + j(0.03)
+                                   : 0.45 + 0.38 * Math.sin(s.t * 2.7) + j(0.03);
+    case "timing":   return (p.rough ? 6 : 11) + j(1);
+    case "voltage":  return 14.1 + j(0.1);
+    case "fuel":     return p.fuel;
+  }
+}
+
+function run(src, print, report){
+  var sim = null;
+  function need(ln){
+    if(!sim) throw new TErr('No scanner plugged in. Start with: plug "commuter"', ln);
+    return sim;
+  }
+  var ast = parse(tokenize(src));
+  var steps = 0;
+  function tick(line){
+    if(++steps > 3000000) throw new TErr("This program has been running for too long — check your cruise condition", line);
+  }
+
+  var globals = new Env(null);
+  function builtin(name, arity, fn){
+    globals.declare(name, {__fn:true, native:true, name:name, arity:arity, call:fn});
+  }
+  builtin("sqrt", 1, function(a, ln){ return Math.sqrt(num(a[0], ln, "sqrt")); });
+  builtin("cbrt", 1, function(a, ln){ return Math.cbrt(num(a[0], ln, "cbrt")); });
+  builtin("abs", 1, function(a, ln){ return Math.abs(num(a[0], ln, "abs")); });
+  builtin("floor", 1, function(a, ln){ return Math.floor(num(a[0], ln, "floor")); });
+  builtin("min", 2, function(a, ln){ return Math.min(num(a[0], ln, "min"), num(a[1], ln, "min")); });
+  builtin("max", 2, function(a, ln){ return Math.max(num(a[0], ln, "max"), num(a[1], ln, "max")); });
+  builtin("text", 1, function(a){ return show(a[0]); });
+  builtin("round", -1, function(a, ln){
+    var d = a.length > 1 ? num(a[1], ln, "round") : 0;
+    var m = Math.pow(10, d);
+    return Math.round(num(a[0], ln, "round") * m) / m;
+  });
+  builtin("len", 1, function(a, ln){
+    var v = a[0];
+    if(Array.isArray(v) || typeof v === "string") return v.length;
+    throw new TErr("len needs a convoy or some text", ln);
+  });
+  builtin("add", 2, function(a, ln){
+    if(!Array.isArray(a[0])) throw new TErr("add needs a convoy first", ln);
+    a[0].push(a[1]); return a[0];
+  });
+  builtin("pad", 2, function(a, ln){
+    var s = show(a[0]), w = num(a[1], ln, "pad");
+    while(s.length < w) s += " ";
+    return s;
+  });
+
+  builtin("scan", 0, function(a, ln){ return need(ln).stored.slice(); });
+  builtin("pending", 0, function(a, ln){ return need(ln).pending.slice(); });
+  builtin("clear", 0, function(a, ln){
+    var s = need(ln), n = s.stored.length + s.pending.length;
+    s.stored = []; s.pending = []; s.clearedAt = s.t;
+    return n;
+  });
+  builtin("mil", 0, function(a, ln){ return need(ln).stored.length > 0; });
+  builtin("vin", 0, function(a, ln){ return need(ln).p.vin; });
+  builtin("vehicle", 0, function(a, ln){ return need(ln).p.car; });
+  builtin("sensor", 1, function(a, ln){ return simRead(need(ln), sensorKey(a[0], ln)); });
+  builtin("sensors", 0, function(){ return Object.keys(SENSORS); });
+  builtin("unit", 1, function(a, ln){ return SENSORS[sensorKey(a[0], ln)][1]; });
+  builtin("explain", 1, function(a, ln){ return explainCode(dtcKey(a[0], ln)); });
+  builtin("causes", 1, function(a, ln){ return (CAUSES[dtcKey(a[0], ln)] || []).slice(); });
+  builtin("wait", 1, function(a, ln){
+    var sec = num(a[0], ln, "wait");
+    if(sec < 0) throw new TErr("wait cannot go backwards in time", ln);
+    if(sim) simAdvance(sim, sec);
+    return null;
+  });
+
+  function evalNode(n, env){
+    switch(n.k){
+      case "lit": return n.val;
+      case "var": return env.get(n.name, n.line);
+      case "convoy": return n.items.map(function(it){ return evalNode(it, env); });
+      case "neg": return -num(evalNode(n.val, env), n.line, "A minus sign");
+      case "not": return !truthy(evalNode(n.val, env));
+      case "logic": {
+        var l = evalNode(n.l, env);
+        if(n.op === "and") return truthy(l) ? evalNode(n.r, env) : l;
+        return truthy(l) ? l : evalNode(n.r, env);
+      }
+      case "index": {
+        var obj = evalNode(n.obj, env);
+        var ix = evalNode(n.idx, env);
+        if(!Array.isArray(obj) && typeof obj !== "string")
+          throw new TErr("Only a convoy or text can be indexed", n.line);
+        ix = num(ix, n.line, "An index");
+        if(ix < 0 || ix >= obj.length || !Number.isInteger(ix))
+          throw new TErr("Slot " + fmtNum(ix) + " is outside this convoy (it holds " + obj.length + ")", n.line);
+        return obj[ix];
+      }
+      case "bin": {
+        var a = evalNode(n.l, env), b = evalNode(n.r, env);
+        switch(n.op){
+          case "+":
+            if(typeof a === "string" || typeof b === "string") return show(a) + show(b);
+            if(Array.isArray(a) && Array.isArray(b)) return a.concat(b);
+            return num(a, n.l.line, "+") + num(b, n.l.line, "+");
+          case "-": return num(a, n.line, "-") - num(b, n.line, "-");
+          case "*": return num(a, n.line, "*") * num(b, n.line, "*");
+          case "/":
+            if(num(b, n.line, "/") === 0) throw new TErr("Division by zero", n.line);
+            return num(a, n.line, "/") / b;
+          case "%":
+            if(num(b, n.line, "%") === 0) throw new TErr("Division by zero", n.line);
+            return num(a, n.line, "%") % b;
+          case "^": return Math.pow(num(a, n.line, "^"), num(b, n.line, "^"));
+          case "==": return show(a) === show(b);
+          case "!=": return show(a) !== show(b);
+          case "<": return num(a, n.line, "<") < num(b, n.line, "<");
+          case ">": return num(a, n.line, ">") > num(b, n.line, ">");
+          case "<=": return num(a, n.line, "<=") <= num(b, n.line, "<=");
+          case ">=": return num(a, n.line, ">=") >= num(b, n.line, ">=");
+        }
+        break;
+      }
+      case "call": {
+        var fn = evalNode(n.fn, env);
+        if(!fn || !fn.__fn) throw new TErr("That is not something you can call", n.line);
+        var args = n.args.map(function(a){ return evalNode(a, env); });
+        if(fn.native){
+          if(fn.arity >= 0 && args.length !== fn.arity)
+            throw new TErr(fn.name + " expects " + fn.arity + " value" + (fn.arity === 1 ? "" : "s") + ", got " + args.length, n.line);
+          if(fn.name === "round" && args.length < 1)
+            throw new TErr("round expects at least 1 value", n.line);
+          return fn.call(args, n.line);
+        }
+        if(args.length !== fn.params.length)
+          throw new TErr("build " + fn.name + " expects " + fn.params.length + " value" +
+            (fn.params.length === 1 ? "" : "s") + ", got " + args.length, n.line);
+        var local = new Env(fn.env);
+        for(var i = 0; i < args.length; i++) local.declare(fn.params[i], args[i]);
+        try { execBlock(fn.body, local); }
+        catch(e){ if(e instanceof Ret) return e.v; throw e; }
+        return null;
+      }
+    }
+    throw new TErr("Rust Bucket could not evaluate that", n.line);
+  }
+
+  function exec(n, env){
+    tick(n.line);
+    switch(n.k){
+      case "spec": env.declare(n.name, evalNode(n.val, env)); return;
+      case "assign": env.set(n.name, evalNode(n.val, env), n.line); return;
+      case "setindex": {
+        var obj = evalNode(n.obj, env);
+        if(!Array.isArray(obj)) throw new TErr("Only a convoy has slots you can shift", n.line);
+        var ix = num(evalNode(n.idx, env), n.line, "An index");
+        if(ix < 0 || ix >= obj.length) throw new TErr("Slot " + fmtNum(ix) + " is outside this convoy", n.line);
+        obj[ix] = evalNode(n.val, env); return;
+      }
+      case "honk": print(show(evalNode(n.val, env))); return;
+      case "expr": evalNode(n.val, env); return;
+      case "check":
+        if(truthy(evalNode(n.cond, env))) execBlock(n.then, new Env(env));
+        else if(n.alt) execBlock(n.alt, new Env(env));
+        return;
+      case "lap": {
+        var lo = num(evalNode(n.lo, env), n.line, "The start of a lap");
+        var hi = num(evalNode(n.hi, env), n.line, "The end of a lap");
+        for(var i = lo; i <= hi; i++){
+          tick(n.line);
+          var e = new Env(env);
+          e.declare(n.name, i);
+          try { execBlock(n.body, e); }
+          catch(err){ if(err === BRAKE) break; throw err; }
+        }
+        return;
+      }
+      case "cruise":
+        for(;;){
+          tick(n.line);
+          if(!truthy(evalNode(n.cond, env))) break;
+          try { execBlock(n.body, new Env(env)); }
+          catch(err){ if(err === BRAKE) break; throw err; }
+        }
+        return;
+      case "brake": throw BRAKE;
+      case "plug": {
+        var key = evalNode(n.val, env);
+        if(typeof key !== "string") throw new TErr('plug needs a car name in quotes, like plug "commuter"', n.line);
+        key = key.toLowerCase();
+        if(!PROFILES[key]) throw new TErr('No car called "' + key + '" on the lift. Try: ' + Object.keys(PROFILES).join(", "), n.line);
+        sim = makeSim(key);
+        if(report) report.sim = sim;
+        return;
+      }
+      case "build":
+        env.declare(n.name, {__fn:true, name:n.name, params:n.params, body:n.body, env:env});
+        return;
+      case "deliver": throw new Ret(n.val ? evalNode(n.val, env) : null);
+    }
+  }
+  function execBlock(body, env){ for(var i = 0; i < body.length; i++) exec(body[i], env); }
+
+  for(var i = 0; i < ast.length; i++){
+    if(ast[i].k === "build") exec(ast[i], globals);
+  }
+  try {
+    for(var j = 0; j < ast.length; j++){
+      if(ast[j].k !== "build") exec(ast[j], globals);
+    }
+  } catch(e){
+    if(e === BRAKE) throw new TErr("brake only works inside a lap or cruise", 0);
+    if(e instanceof Ret) throw new TErr("deliver only works inside a build", 0);
+    throw e;
+  }
+  return steps;
+}
+
+var EXAMPLES = [
+  { id:"quarter", chip:"Quarter mile", file:"quarter-mile.bkt", src:
+'// Estimate a quarter-mile pass from weight and power.\n' +
+'// Hale\'s formula. Close enough to start an argument.\n' +
+'\n' +
+'spec weight = 3200      // lb, with driver\n' +
+'spec power  = 450       // crank hp\n' +
+'\n' +
+'build et(w, hp) {\n' +
+'  deliver 5.825 * cbrt(w / hp)\n' +
+'}\n' +
+'\n' +
+'build trap(w, hp) {\n' +
+'  deliver 234 * cbrt(hp / w)\n' +
+'}\n' +
+'\n' +
+'spec seconds = round(et(weight, power), 2)\n' +
+'\n' +
+'honk "Weight  " + text(weight) + " lb"\n' +
+'honk "Power   " + text(power) + " hp"\n' +
+'honk "ET      " + text(seconds) + " sec"\n' +
+'honk "Trap    " + text(round(trap(weight, power), 1)) + " mph"\n' +
+'honk ""\n' +
+'\n' +
+'check seconds < 10 {\n' +
+'  honk "Under ten. The track will want a cage."\n' +
+'} swerve check seconds < 13 {\n' +
+'  honk "Quick enough to embarrass someone."\n' +
+'} swerve {\n' +
+'  honk "Slow, but you can still enjoy the corners."\n' +
+'}\n' },
+
+  { id:"gearing", chip:"Gearing", file:"gearing.bkt", src:
+'// Road speed in every gear at redline.\n' +
+'\n' +
+'spec redline = 7200            // rpm\n' +
+'spec finalDrive = 3.73\n' +
+'spec tyreDiameter = 25.5       // inches\n' +
+'spec gears = [3.36, 2.07, 1.43, 1.00, 0.84]\n' +
+'\n' +
+'build speedAt(rpm, ratio) {\n' +
+'  spec wheelRpm = rpm / (ratio * finalDrive)\n' +
+'  deliver wheelRpm * 3.14159 * tyreDiameter * 60 / 63360\n' +
+'}\n' +
+'\n' +
+'honk "At " + text(redline) + " rpm:"\n' +
+'\n' +
+'lap g from 1 to len(gears) {\n' +
+'  spec ratio = gears[g - 1]\n' +
+'  spec mph = round(speedAt(redline, ratio), 1)\n' +
+'  honk "  gear " + text(g) + "  " + text(ratio) + ":1  ->  " + text(mph) + " mph"\n' +
+'}\n' +
+'\n' +
+'spec topGear = gears[len(gears) - 1]\n' +
+'honk ""\n' +
+'honk "Cruising at 70 mph you sit at " +\n' +
+'     text(round(70 * 63360 / (3.14159 * tyreDiameter * 60) * topGear * finalDrive, 0)) +\n' +
+'     " rpm."\n' },
+
+  { id:"pit", chip:"Pit strategy", file:"stint.bkt", src:
+'// A fifteen-lap stint.\n' +
+'// Fuel every third lap, tyres every fifth.\n' +
+'\n' +
+'spec total = 15\n' +
+'\n' +
+'lap n from 1 to total {\n' +
+'  spec needsFuel  = n % 3 == 0\n' +
+'  spec needsTyres = n % 5 == 0\n' +
+'\n' +
+'  check needsFuel and needsTyres {\n' +
+'    honk "lap " + text(n) + "  full service"\n' +
+'  } swerve check needsFuel {\n' +
+'    honk "lap " + text(n) + "  splash of fuel"\n' +
+'  } swerve check needsTyres {\n' +
+'    honk "lap " + text(n) + "  fresh rubber"\n' +
+'  } swerve {\n' +
+'    honk "lap " + text(n) + "  push"\n' +
+'  }\n' +
+'}\n' },
+
+  { id:"range", chip:"Range", file:"range.bkt", src:
+'// Drive until the tank runs dry, or the coast arrives.\n' +
+'\n' +
+'spec fuel = 12.4          // gallons\n' +
+'spec mpg = 21\n' +
+'spec distance = 0\n' +
+'spec target = 250\n' +
+'\n' +
+'cruise fuel > 0 {\n' +
+'  shift distance = distance + mpg\n' +
+'  shift fuel = fuel - 1\n' +
+'\n' +
+'  check distance >= target {\n' +
+'    honk "Reached the coast at " + text(distance) + " miles."\n' +
+'    brake\n' +
+'  }\n' +
+'}\n' +
+'\n' +
+'check distance < target {\n' +
+'  honk "Ran dry " + text(target - distance) + " miles short."\n' +
+'}\n' +
+'\n' +
+'honk "Fuel left  " + text(round(fuel, 1)) + " gal"\n' +
+'honk "Distance   " + text(distance) + " mi"\n' },
+
+  { id:"convoy", chip:"Lap times", file:"laptimes.bkt", src:
+'// Read a stint of lap times and find the good one.\n' +
+'\n' +
+'spec times = [88.4, 87.9, 91.2, 87.1, 88.0, 94.6, 87.6]\n' +
+'\n' +
+'spec best = times[0]\n' +
+'spec total = 0\n' +
+'\n' +
+'lap i from 1 to len(times) {\n' +
+'  spec t = times[i - 1]\n' +
+'  shift total = total + t\n' +
+'  check t < best { shift best = t }\n' +
+'}\n' +
+'\n' +
+'spec average = total / len(times)\n' +
+'\n' +
+'honk "Laps      " + text(len(times))\n' +
+'honk "Best      " + text(best) + " s"\n' +
+'honk "Average   " + text(round(average, 2)) + " s"\n' +
+'honk ""\n' +
+'\n' +
+'lap i from 1 to len(times) {\n' +
+'  spec delta = round(times[i - 1] - best, 2)\n' +
+'  check delta > 2 {\n' +
+'    honk "lap " + text(i) + " lost " + text(delta) + " s — traffic?"\n' +
+'  }\n' +
+'}\n' },
+
+  { id:"scan", group:"OBD-II", chip:"Scan codes", file:"scan.bkt", src:
+'// Plug into the OBD-II port and read what the car has stored.\n' +
+'plug "commuter"\n' +
+'\n' +
+'honk "Connected  " + vehicle()\n' +
+'honk "VIN        " + vin()\n' +
+'honk ""\n' +
+'\n' +
+'spec codes = scan()\n' +
+'\n' +
+'check len(codes) == 0 {\n' +
+'  honk "No stored codes."\n' +
+'} swerve {\n' +
+'  honk text(len(codes)) + " stored code(s):"\n' +
+'  lap i from 1 to len(codes) {\n' +
+'    spec c = codes[i - 1]\n' +
+'    honk "  " + c + "  " + explain(c)\n' +
+'  }\n' +
+'}\n' +
+'\n' +
+'spec waiting = pending()\n' +
+'check len(waiting) > 0 {\n' +
+'  honk ""\n' +
+'  honk "Pending, not confirmed yet:"\n' +
+'  lap i from 1 to len(waiting) {\n' +
+'    honk "  " + waiting[i - 1] + "  " + explain(waiting[i - 1])\n' +
+'  }\n' +
+'}\n' +
+'\n' +
+'check mil() {\n' +
+'  honk ""\n' +
+'  honk "Check engine light is on."\n' +
+'}\n' },
+
+  { id:"live", group:"OBD-II", chip:"Live data", file:"live.bkt", src:
+'// Live data: what the engine computer sees right now.\n' +
+'plug "clean"\n' +
+'\n' +
+'honk "Connected  " + vehicle()\n' +
+'honk ""\n' +
+'\n' +
+'spec names = sensors()\n' +
+'lap i from 1 to len(names) {\n' +
+'  spec n = names[i - 1]\n' +
+'  honk pad(n, 10) + pad(text(round(sensor(n), 1)), 8) + unit(n)\n' +
+'}\n' +
+'\n' +
+'// Now a car that is running lean. Watch the fuel trims.\n' +
+'plug "commuter"\n' +
+'honk ""\n' +
+'honk "Connected  " + vehicle()\n' +
+'honk pad("stft", 10) + text(round(sensor("stft"), 1)) + " %"\n' +
+'honk pad("ltft", 10) + text(round(sensor("ltft"), 1)) + " %"\n' +
+'honk "Positive trims mean the computer is adding fuel to make up for extra air."\n' },
+
+  { id:"warmup", group:"OBD-II", chip:"Warm-up watch", file:"warmup.bkt", src:
+'// Watch a cold engine warm up. Something is wrong with this truck.\n' +
+'plug "overheat"\n' +
+'\n' +
+'spec minutes = 0\n' +
+'\n' +
+'cruise minutes <= 20 {\n' +
+'  spec temp = round(sensor("coolant"), 0)\n' +
+'  spec idle = round(sensor("rpm"), 0)\n' +
+'  honk pad(text(minutes) + " min", 8) + pad(text(temp) + " °C", 9) + text(idle) + " rpm"\n' +
+'\n' +
+'  check temp >= 110 {\n' +
+'    honk ""\n' +
+'    honk "Coolant past 110 °C. Shut it down."\n' +
+'    brake\n' +
+'  }\n' +
+'\n' +
+'  wait(60)\n' +
+'  shift minutes = minutes + 1\n' +
+'}\n' +
+'\n' +
+'honk ""\n' +
+'spec codes = scan()\n' +
+'lap i from 1 to len(codes) {\n' +
+'  honk codes[i - 1] + "  " + explain(codes[i - 1])\n' +
+'}\n' },
+
+  { id:"diagnose", group:"OBD-II", chip:"Diagnose", file:"diagnose.bkt", src:
+'// Scan, explain, and list where to look first.\n' +
+'plug "misfire"\n' +
+'\n' +
+'spec codes = scan()\n' +
+'lap i from 1 to len(codes) {\n' +
+'  spec c = codes[i - 1]\n' +
+'  honk c + "  " + explain(c)\n' +
+'  spec why = causes(c)\n' +
+'  lap j from 1 to len(why) {\n' +
+'    honk "    check " + why[j - 1]\n' +
+'  }\n' +
+'  honk ""\n' +
+'}\n' +
+'\n' +
+'// A misfire shows up as an idle that will not sit still.\n' +
+'spec low = 9999\n' +
+'spec high = 0\n' +
+'lap s from 1 to 20 {\n' +
+'  spec r = sensor("rpm")\n' +
+'  shift low = min(low, r)\n' +
+'  shift high = max(high, r)\n' +
+'}\n' +
+'honk "Idle wandered " + text(round(high - low, 0)) + " rpm across 20 samples."\n' +
+'\n' +
+'check high - low > 150 {\n' +
+'  honk "That is rough. A healthy engine holds much steadier."\n' +
+'}\n' },
+
+  { id:"clear", group:"OBD-II", chip:"Clear and recheck", file:"clear.bkt", src:
+'// Clearing codes turns the light off. It does not fix the car.\n' +
+'// It also resets readiness monitors, which inspection stations notice.\n' +
+'plug "commuter"\n' +
+'\n' +
+'honk "Stored before  " + text(scan())\n' +
+'honk "Cleared " + text(clear()) + " code(s)."\n' +
+'\n' +
+'check mil() {\n' +
+'  honk "Check engine light: on"\n' +
+'} swerve {\n' +
+'  honk "Check engine light: off"\n' +
+'}\n' +
+'honk ""\n' +
+'\n' +
+'lap drive from 1 to 4 {\n' +
+'  wait(300)    // five minutes of driving\n' +
+'  honk pad(text(drive * 5) + " min", 8) + "stored " + pad(text(scan()), 16) + "pending " + text(pending())\n' +
+'}\n' +
+'\n' +
+'check mil() {\n' +
+'  honk ""\n' +
+'  honk "The light is back. The fault never left."\n' +
+'}\n' }
+];
+
+var codeEl = document.getElementById("code");
+var outEl = document.getElementById("out");
+var chipsEl = document.getElementById("chips");
+var statusEl = document.getElementById("status");
+var fnameEl = document.getElementById("fname");
+var needle = document.getElementById("needle");
+var current = EXAMPLES[0];
+
+var ticks = document.getElementById("ticks");
+for(var t = 0; t <= 8; t++){
+  var ang = (-88 + t * (176 / 8)) * Math.PI / 180;
+  var x1 = 75 + Math.sin(ang) * 47, y1 = 82 - Math.cos(ang) * 47;
+  var x2 = 75 + Math.sin(ang) * 40, y2 = 82 - Math.cos(ang) * 40;
+  var ln = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  ln.setAttribute("x1", x1.toFixed(1)); ln.setAttribute("y1", y1.toFixed(1));
+  ln.setAttribute("x2", x2.toFixed(1)); ln.setAttribute("y2", y2.toFixed(1));
+  ticks.appendChild(ln);
+}
+
+var lampEl = document.getElementById("lamp");
+var vehicleEl = document.getElementById("vehicleLabel");
+function updateDash(sim){
+  lampEl.classList.toggle("on", !!(sim && sim.stored.length));
+  vehicleEl.textContent = sim ? sim.p.car + " (simulated)" : "no car plugged in";
+}
+function sweep(ok, sim){
+  var peak = ok ? 62 : 88;
+  var rest = ok ? -20 : -88;
+  if(ok && sim && sim.lastRpm !== null) rest = -88 + Math.max(0, Math.min(1, sim.lastRpm / 8000)) * 176;
+  needle.setAttribute("transform", "rotate(" + peak + " 75 82)");
+  setTimeout(function(){
+    needle.setAttribute("transform", "rotate(" + rest.toFixed(1) + " 75 82)");
+  }, 620);
+}
+
+var lastGroup = null;
+EXAMPLES.forEach(function(ex){
+  var g = ex.group || "Language";
+  if(g !== lastGroup){
+    var lbl = document.createElement("span");
+    lbl.className = "chipgroup";
+    lbl.textContent = g;
+    chipsEl.appendChild(lbl);
+    lastGroup = g;
+  }
+  var b = document.createElement("button");
+  b._ex = ex;
+  b.className = "chip";
+  b.textContent = ex.chip;
+  b.setAttribute("aria-pressed", ex === current ? "true" : "false");
+  b.addEventListener("click", function(){ load(ex); });
+  chipsEl.appendChild(b);
+});
+
+function load(ex){
+  current = ex;
+  codeEl.value = ex.src;
+  fnameEl.textContent = ex.file;
+  Array.prototype.forEach.call(chipsEl.querySelectorAll(".chip"), function(c){
+    c.setAttribute("aria-pressed", c._ex === ex ? "true" : "false");
+  });
+  updateDash(null);
+  outEl.innerHTML = '<span class="note">Press Run.</span>';
+  statusEl.textContent = "";
+  needle.setAttribute("transform", "rotate(-88 75 82)");
+}
+
+function render(lines, err, steps){
+  outEl.textContent = "";
+  if(!lines.length && !err){
+    var n = document.createElement("span");
+    n.className = "note";
+    n.textContent = "Ran clean, but nothing was honked.";
+    outEl.appendChild(n);
+  }
+  lines.forEach(function(l){
+    var s = document.createElement("span");
+    s.className = "ln";
+    s.textContent = l;
+    outEl.appendChild(s);
+  });
+  if(err){
+    var e = document.createElement("span");
+    e.className = "ln err";
+    e.textContent = (err.line ? "Line " + err.line + ": " : "") + err.msg;
+    outEl.appendChild(e);
+  }
+  statusEl.textContent = err ? "stalled" : (steps + " steps");
+}
+
+document.getElementById("run").addEventListener("click", function(){
+  var lines = [];
+  var err = null, steps = 0, report = {sim:null};
+  try {
+    steps = run(codeEl.value, function(s){
+      if(lines.length > 500) throw new TErr("Too much output — over 500 honks", 0);
+      lines.push(s);
+    }, report);
+  } catch(e){
+    err = (e instanceof TErr) ? e : {msg:"Something went wrong: " + e.message, line:0};
+  }
+  render(lines, err, steps);
+  sweep(!err, report.sim);
+  updateDash(report.sim);
+});
+
+document.getElementById("reset").addEventListener("click", function(){ load(current); });
+
+codeEl.addEventListener("keydown", function(e){
+  if(e.key === "Tab"){
+    e.preventDefault();
+    var s = this.selectionStart, en = this.selectionEnd;
+    this.value = this.value.slice(0, s) + "  " + this.value.slice(en);
+    this.selectionStart = this.selectionEnd = s + 2;
+  }
+  if((e.metaKey || e.ctrlKey) && e.key === "Enter"){
+    e.preventDefault();
+    document.getElementById("run").click();
+  }
+});
+
+load(EXAMPLES.filter(function(e){ return e.id === "scan"; })[0]);
+})();
+</script>
